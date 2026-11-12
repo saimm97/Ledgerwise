@@ -1,6 +1,6 @@
-# BudgetBridge
+# Ledgerwise
 
-BudgetBridge is a comprehensive, Django-based financial management platform designed to streamline project budgeting, expense tracking, and workforce management for companies. It provides a multi-user environment with role-based access control, allowing for efficient collaboration between administrators, project managers, and employees.
+Ledgerwise is a comprehensive, Django-based financial management platform designed to streamline project budgeting, expense tracking, and workforce management for companies. It provides a multi-user environment with role-based access control, allowing for efficient collaboration between administrators, project managers, and employees.
 
 ## Features
 
