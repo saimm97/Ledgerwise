@@ -1,4 +1,4 @@
-# BudgetBridge/settings/local.py
+# Ledgerwise/settings/local.py
 from .base import *
 
 DEBUG = True
@@ -7,8 +7,8 @@ ALLOWED_HOSTS = ["*"]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME", "budgetbridge_db"),
-        "USER": os.getenv("DB_USER", "budgetbridge_user"),
+        "NAME": os.getenv("DB_NAME", "ledgerwise_db"),
+        "USER": os.getenv("DB_USER", "ledgerwise_user"),
         "PASSWORD": os.getenv("DB_PASSWORD", "12345678"),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),

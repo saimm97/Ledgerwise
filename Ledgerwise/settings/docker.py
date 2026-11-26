@@ -1,4 +1,4 @@
-# BudgetBridge/settings/docker.py
+# Ledgerwise/settings/docker.py
 from .base import *
 
 DEBUG = True
@@ -8,8 +8,8 @@ ALLOWED_HOSTS = ["*"]
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "budgetbridge_db"),
-        "USER": os.getenv("POSTGRES_USER", "budgetbridge_user"),
+        "NAME": os.getenv("POSTGRES_DB", "ledgerwise_db"),
+        "USER": os.getenv("POSTGRES_USER", "ledgerwise_user"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "12345678"),
         "HOST": os.getenv("POSTGRES_HOST", "db"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),

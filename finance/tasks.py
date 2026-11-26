@@ -23,7 +23,7 @@ def send_invoice_email(invoice_id):
     )
 
     subject = f"Invoice #{invoice.invoice_no} for Project: {invoice.project.name}"
-    from_email = "noreply@budgetbridge.com"
+    from_email = "noreply@ledgerwise.com"
     to_email = [invoice.client.email]
 
     email = EmailMultiAlternatives(subject, "", from_email, to_email)
@@ -55,7 +55,7 @@ def send_payment_invoice_email(invoice_id):
 
     # Email details
     subject = f"Invoice #{invoice.invoice_no} for Project: {invoice.project.name}"
-    from_email = "noreply@budgetbridge.com"
+    from_email = "noreply@ledgerwise.com"
     to_email = [invoice.project.client.email]
 
     # Send the email

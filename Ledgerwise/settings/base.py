@@ -1,4 +1,4 @@
-# BudgetBridge/settings/base.py
+# Ledgerwise/settings/base.py
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -37,7 +37,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'BudgetBridge.urls'
+ROOT_URLCONF = 'Ledgerwise.urls'
 
 TEMPLATES = [
     {
@@ -55,7 +55,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'BudgetBridge.wsgi.application'
+WSGI_APPLICATION = 'Ledgerwise.wsgi.application'
 
 # Auth
 AUTH_USER_MODEL = 'accounts.User'
