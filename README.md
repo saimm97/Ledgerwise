@@ -4,7 +4,7 @@ Ledgerwise is a comprehensive, Django-based financial management platform design
 
 ## Features
 
-- **Multi-Company Architecture:** Each instance of BudgetBridge can manage multiple companies, with data isolated between them.
+- **Multi-Company Architecture:** Each instance of Ledgerwise can manage multiple companies, with data isolated between them.
 - **Role-Based Access Control (RBAC):**  Define custom roles and permissions for users within a company, ensuring that users can only access the features and data relevant to their position.
 - **Project Management:** Create and manage projects, assign project managers, and track project status and budget.
 - **Financial Management:**
@@ -120,137 +120,135 @@ Once the setup is complete, standard users can perform their tasks through the f
 
 ## How to Run the App
 
-### Local Setup (without Docker)
+### Quick start (recommended): Docker Compose
 
-1. **Clone the repository:**
+This is the easiest way. It starts Django, PostgreSQL, Redis and the Celery worker together, and runs migrations for you. You only need [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed.
+
+1. **Go to the project folder:**
     ```bash
-    git clone <repository-url>
-    cd BudgetBridge
+    cd <project-folder>
     ```
 
-2. **Create and activate a virtual environment:**
-    ```bash
-    python -m venv myenv
-    source myenv/bin/activate  # macOS/Linux
-    # myenv\Scripts\activate    # Windows
+2. **Create a `.env` file** in the project root with this content:
+    ```env
+    SECRET_KEY=change-me-to-any-long-random-string
+    POSTGRES_DB=ledgerwise_db
+    POSTGRES_USER=ledgerwise_user
+    POSTGRES_PASSWORD=12345678
+    POSTGRES_HOST=db
+    POSTGRES_PORT=5432
+    REDIS_URL=redis://redis:6379/0
+
+    # Email (optional, only needed to send invoice emails)
+    EMAIL_HOST_USER=
+    EMAIL_HOST_PASSWORD=
     ```
 
-3. **Install dependencies:**
+3. **Build and start everything:**
+    ```bash
+    docker compose up --build
+    ```
+    Wait until you see `Starting development server at http://0.0.0.0:8000/`.
+
+4. **Create your first admin user** (in a second terminal):
+    ```bash
+    docker compose exec server python manage.py createsuperuser
+    ```
+
+5. **Open the app:**
+    - App: [http://localhost:8000/](http://localhost:8000/)
+    - Admin panel: [http://localhost:8000/admin/](http://localhost:8000/admin/)
+
+6. **Stop it:**
+    ```bash
+    docker compose down          # keep the database
+    docker compose down -v       # also delete the database
+    ```
+
+Notes:
+- The project folder is mounted into the container, so template and CSS changes show up after a browser refresh (hard refresh with Cmd/Ctrl + Shift + R if the old styles are cached). Python changes reload automatically.
+- `docker-compose-dev.yaml` is a different file: it pulls the prebuilt image from Docker Hub instead of building your local code. Do not use it to test local changes.
+- If port 5432 or 6379 is already used on your machine (for example a local PostgreSQL), stop that service or change the left side of the `ports:` lines in `docker-compose.yaml`.
+
+### Run without Docker
+
+Use this if you prefer a normal Python setup. You need Python 3.12, PostgreSQL and Redis installed locally. PDF invoices also need the WeasyPrint system libraries (on macOS: `brew install pango`).
+
+1. **Create and activate a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate      # macOS/Linux
+    # venv\Scripts\activate        # Windows
+    ```
+
+2. **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
-4. **Set up the database (PostgreSQL) & ENV:**
-    - Make sure PostgreSQL is installed and running.
-    - Create a database and user for the app:
-      ```sql
-      CREATE DATABASE budgetbridge_db;
-      CREATE USER budgetbridge_user WITH PASSWORD '12345678';
-      GRANT ALL PRIVILEGES ON DATABASE budgetbridge_db TO budgetbridge_user;
-      ```
-    - Create a `.env` file in the root directory with the following:
-      ```env
-      SECRET_KEY=<your-secret-key>
-      DEBUG=True
-      DB_NAME=budgetbridge_db
-      DB_USER=budgetbridge_user
-      DB_PASSWORD=12345678
-      DB_HOST=localhost
-      DB_PORT=5432
-      REDIS_URL_LOCAL=redis://localhost:6379/0
-
-      # Email
-      EMAIL_HOST_USER=
-      EMAIL_HOST_PASSWORD=
-
-      ```
-
-5. **Start Redis (if not already running):**
-    ```bash
-    brew services start redis   # macOS
-    # or for Linux:
-    sudo service redis-server start
+3. **Create the database:**
+    ```sql
+    CREATE DATABASE ledgerwise_db;
+    CREATE USER ledgerwise_user WITH PASSWORD '12345678';
+    GRANT ALL PRIVILEGES ON DATABASE ledgerwise_db TO ledgerwise_user;
+    ALTER DATABASE ledgerwise_db OWNER TO ledgerwise_user;
     ```
 
-6. **Run Django migrations:**
+4. **Create a `.env` file** in the project root:
+    ```env
+    SECRET_KEY=change-me-to-any-long-random-string
+    DB_NAME=ledgerwise_db
+    DB_USER=ledgerwise_user
+    DB_PASSWORD=12345678
+    DB_HOST=localhost
+    DB_PORT=5432
+
+    # Email (optional)
+    EMAIL_HOST_USER=
+    EMAIL_HOST_PASSWORD=
+    ```
+    Redis is expected at `redis://localhost:6379/0` by default.
+
+5. **Start Redis:**
+    ```bash
+    brew services start redis          # macOS
+    # sudo service redis-server start  # Linux
+    ```
+
+6. **Tell Django to use the local settings** (do this in every new terminal, before any `manage.py` command):
+    ```bash
+    export DJANGO_SETTINGS_MODULE=Ledgerwise.settings.local
+    ```
+
+7. **Set up the database and an admin user:**
     ```bash
     python manage.py migrate
-    ```
-
-7. **Create a superuser:**
-    ```bash
     python manage.py createsuperuser
     ```
 
-8. **Start the Django development server:**
+8. **Start the server:**
     ```bash
-    export DJANGO_SETTINGS_MODULE=BudgetBridge.settings.local
     python manage.py runserver
     ```
+    Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
-9. **Start Celery worker (for background tasks):**
+9. **Start the Celery worker** (optional, only needed for background emails), in another terminal with the same `DJANGO_SETTINGS_MODULE`:
     ```bash
-    celery -A BudgetBridge worker --loglevel=info
+    celery -A Ledgerwise worker --loglevel=info
     ```
 
-10. **Optional: Clean compiled Python files**
-    ```bash
-    find . -name "*.pyc" -delete
-    find . -name "__pycache__" -delete
-    ```
+## User Interface
 
-11. **Access the app:**  
-    Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
+The interface is dark by default. Use the sun/moon button in the top bar (or on the login page) to switch between dark and light mode. Your choice is saved in the browser. All styling lives in `static/css/global.css`; shared layout is in `templates/base.html` and `templates/partials/`.
 
----
+## Project monthly view and payslips
 
-### Docker Setup
+- **Project monthly view:** open any project and click "Monthly hours & invoices". It shows, month by month since the project started, the hours each person logged, what was invoiced, what was received, what is still owed and the approved expenses.
+- **Payslips:** every payroll run keeps a snapshot of each person's pay (type, rate, hours, working days), so old payslips never change when pay rates are edited later. Open "My payroll" for your own payslips, or "Payroll history" (payroll managers) for every run and each person's full history. Each payslip can be downloaded as a PDF.
 
-1. **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd BudgetBridge
-    ```
+## Troubleshooting
 
-2. **Ensure Docker and Docker Compose are installed.**
-
-3. **Set up the ENV:**
-      ```
-    - Create a `.env` file in the root directory with the following:
-      ```env
-      SECRET_KEY=<your-secret-key>
-      DEBUG=True
-      POSTGRES_DB=budgetbridge_db
-      POSTGRES_USER=budgetbridge_user
-      POSTGRES_PASSWORD=12345678
-      POSTGRES_HOST=db
-      POSTGRES_PORT=5432
-      REDIS_URL=redis://redis:6379/0
-
-      # Email
-      EMAIL_HOST_USER=
-      EMAIL_HOST_PASSWORD=
-
-      ```
-
-4. **Build and start containers:**
-    ```bash
-    docker-compose up --build
-    ```
-
-    This will start:
-    - Django app on [http://localhost:8000](http://localhost:8000)
-    - PostgreSQL database container
-    - Redis container
-    - Celery worker (if configured in `docker-compose.yml`)
-
-5. **Optional: Run Django management commands inside Docker:**
-    ```bash
-    docker-compose exec web python manage.py migrate
-    docker-compose exec web python manage.py createsuperuser
-    ```
-
-6. **Stop containers:**
-    ```bash
-    docker-compose down
-    ```
+- **`ModuleNotFoundError` or "settings not configured" when running `manage.py`:** you skipped step 6. Export `DJANGO_SETTINGS_MODULE=Ledgerwise.settings.local` first.
+- **Login page shows but styles look old:** hard refresh the browser to clear the cached CSS.
+- **`could not connect to server` (database):** PostgreSQL is not running, or the `.env` values do not match the database you created.
+- **PDF invoice download fails with a missing library error:** install the WeasyPrint system libraries (macOS: `brew install pango`). Docker already includes them.
