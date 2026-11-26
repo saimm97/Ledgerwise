@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ project.name }} · Monthly view{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">{{ project.name }}: monthly view</h1>
+      <p class="page-subtitle">
+        {% if project.client %}{{ project.client.name }} · {% endif %}
+        Hours logged, invoiced and received every month{% if started %} since {{ started|date:"F Y" }}{% endif %}.
+      </p>
+    </div>
+    <a href="{% url 'project_detail' project.id %}" class="btn btn-ghost">Back to project</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="grid grid-4 mb-4" aria-label="Key figures">
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Hours logged</p><p class="stat-value">{{ totals.hours|floatformat:2 }}</p>
+    <p class="text-muted" style="font-size:12px;">{{ totals.approved|floatformat:2 }} approved</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Invoiced</p><p class="stat-value">{{ totals.invoiced|floatformat:2 }}</p>
+    <p class="text-muted" style="font-size:12px;">{{ totals.invoices }} invoice{{ totals.invoices|pluralize }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Received</p><p class="stat-value">{{ totals.received|floatformat:2 }}</p>
+    <p class="text-muted" style="font-size:12px;">{{ outstanding|floatformat:2 }} still outstanding</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Invoiced per hour</p>
+    <p class="stat-value">{% if per_hour %}{{ per_hour }}{% else %}-{% endif %}</p>
+    <p class="text-muted" style="font-size:12px;">{{ totals.spent|floatformat:2 }} approved expenses</p></div></div>
+</section>
+
+{% if rows %}
+<div class="card mb-4">
+  <div class="card-header"><h2 class="card-title">Hours vs. money</h2></div>
+  <div style="padding:18px 22px;"><canvas id="timelineChart" height="90" aria-label="Hours logged against amount invoiced and received per month" role="img"></canvas></div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h2 class="card-title">Month by month</h2></div>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead><tr>
+        <th>Month</th><th class="text-right">Hours</th><th class="text-right">Approved</th>
+        <th class="text-right">Invoiced</th><th class="text-right">Received</th><th class="text-right">Owed at month end</th>
+        <th class="text-right">Per hour</th><th class="text-right">Expenses</th>
+      </tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><strong>{{ r.month|date:"M Y" }}</strong></td>
+          <td class="text-right">{{ r.hours|floatformat:2 }}</td>
+          <td class="text-right">{{ r.approved|floatformat:2 }}</td>
+          <td class="text-right">{{ r.invoiced|floatformat:2 }}{% if r.invoices %} <span class="text-muted">({{ r.invoices }})</span>{% endif %}</td>
+          <td class="text-right">{{ r.received|floatformat:2 }}</td>
+          <td class="text-right">{{ r.outstanding|floatformat:2 }}</td>
+          <td class="text-right">{% if r.per_hour %}{{ r.per_hour }}{% else %}-{% endif %}</td>
+          <td class="text-right">{{ r.spent|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot><tr>
+        <th>Total</th><th class="text-right">{{ totals.hours|floatformat:2 }}</th><th class="text-right">{{ totals.approved|floatformat:2 }}</th>
+        <th class="text-right">{{ totals.invoiced|floatformat:2 }}</th><th class="text-right">{{ totals.received|floatformat:2 }}</th>
+        <th class="text-right">{{ outstanding|floatformat:2 }}</th><th class="text-right">{% if per_hour %}{{ per_hour }}{% else %}-{% endif %}</th>
+        <th class="text-right">{{ totals.spent|floatformat:2 }}</th>
+      </tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h2 class="card-title">Hours by person</h2></div>
+  <div class="table-wrapper">
+    <table class="table">
+      <thead><tr>
+        <th>Person</th><th>Role on project</th>
+        {% for m in months %}<th class="text-right">{{ m|date:"M y" }}</th>{% endfor %}
+        <th class="text-right">Total</th>
+      </tr></thead>
+      <tbody>
+        {% for p in people %}
+        <tr>
+          <td><strong>{{ p.name }}</strong>{% if p.title %}<br><span class="text-muted" style="font-size:12px;">{{ p.title }}</span>{% endif %}</td>
+          <td>{{ p.role }}</td>
+          {% for h in p.per_month %}<td class="text-right">{% if h %}{{ h|floatformat:2 }}{% else %}<span class="text-muted">-</span>{% endif %}</td>{% endfor %}
+          <td class="text-right"><strong>{{ p.total|floatformat:2 }}</strong></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="{{ months|length|add:3 }}" class="text-center text-muted" style="padding:24px;">No one is assigned and no hours are logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{ chart|json_script:"timeline-data" }}
+{% else %}
+<div class="card"><p class="text-muted" style="padding:32px;text-align:center;">Nothing to show yet. Hours and invoices will appear here once they exist.</p></div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if rows %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  var tl = JSON.parse(document.getElementById('timeline-data').textContent), tlChart;
+  function drawTimeline() {
+    var cs = getComputedStyle(document.documentElement);
+    function v(n) { return cs.getPropertyValue(n).trim(); }
+    if (tlChart) tlChart.destroy();
+    Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+    Chart.defaults.color = v('--text-muted');
+    tlChart = new Chart(document.getElementById('timelineChart').getContext('2d'), {
+      data: { labels: tl.labels, datasets: [
+        { type: 'bar', label: 'Hours logged', data: tl.hours, yAxisID: 'h', backgroundColor: v('--primary'), borderRadius: 6, maxBarThickness: 36 },
+        { type: 'line', label: 'Invoiced', data: tl.invoiced, yAxisID: 'm', borderColor: v('--accent'), backgroundColor: v('--accent'), tension: .3 },
+        { type: 'line', label: 'Received', data: tl.received, yAxisID: 'm', borderColor: v('--success'), backgroundColor: v('--success'), tension: .3 }
+      ] },
+      options: { responsive: true, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } },
+        scales: { h: { position: 'left', beginAtZero: true, grid: { color: v('--border') }, title: { display: true, text: 'Hours' } },
+                  m: { position: 'right', beginAtZero: true, grid: { display: false }, title: { display: true, text: 'Amount' } },
+                  x: { grid: { display: false } } } }
+    });
+  }
+  drawTimeline();
+  document.addEventListener('themechange', drawTimeline);
+</script>
+{% endif %}
+{% endblock %}
