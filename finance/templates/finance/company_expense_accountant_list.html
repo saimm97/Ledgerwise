@@ -37,12 +37,16 @@
   <td>{{ expense.description }}</td>
   <td>${{ expense.amount }}</td>
   <td>
+    {% if expense.invoice %}
     <a href="{% url 'expense-invoice-view' expense.id %}" class="btn btn-ghost btn-sm">
       See Invoice
     </a>
     <a href="{% url 'expense-invoice-download' expense.id %}" class="btn btn-primary btn-sm">
       Download Invoice
     </a>
+    {% else %}
+    <span class="text-muted">No invoice</span>
+    {% endif %}
   </td>
 </tr>
           {% empty %}

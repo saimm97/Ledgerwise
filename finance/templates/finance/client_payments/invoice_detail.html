@@ -3,14 +3,11 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2>Invoice #{{ invoice.invoice_no }}</h2>
-  <p><strong>Project:</strong> {{ invoice.project.name }}</p>
-  <p><strong>Client:</strong> {{ invoice.project.client.name }}</p>
-  <p><strong>Issue Date:</strong> {{ invoice.issue_date }}</p>
-  <p><strong>Due Date:</strong> {{ invoice.due_date }}</p>
-  <p><strong>Status:</strong> {{ invoice.get_status_display }}</p>
+  <div class="page-header"><div class="page-header-row"><div><h1 class="page-title">Invoice #{{ invoice.invoice_no }}</h1></div></div></div>
+  <div class="card mb-4"><dl class="kv card-body"><div><dt>Project</dt><dd>{{ invoice.project.name }}</dd></div><div><dt>Client</dt><dd>{{ invoice.project.client.name }}</dd></div><div><dt>Issue Date</dt><dd>{{ invoice.issue_date }}</dd></div><div><dt>Due Date</dt><dd>{{ invoice.due_date }}</dd></div><div><dt>Status</dt><dd>{{ invoice.get_status_display }}</dd></div></dl></div>
 
-  <table class="table table-bordered mt-3">
+
+  <div class="card mb-4"><table class="table">
     <thead>
       <tr>
         <th>Amount</th>
@@ -27,14 +24,12 @@
         <td>{{ invoice.total_amount }}</td>
       </tr>
     </tbody>
-  </table>
+  </table></div>
 
   {% if invoice.payment %}
-    <h5>Payment Details</h5>
-    <p>Status: {{ invoice.payment.get_status_display }}</p>
-    <p>Method: {{ invoice.payment.get_payment_method_display }}</p>
-    <p>Amount Paid: {{ invoice.payment.amount }}</p>
-    <p>Transaction Ref: {{ invoice.payment.transaction_ref }}</p>
+    <h3>Payment details</h3>
+    <div class="card mb-4"><dl class="kv card-body"><div><dt>Status</dt><dd>{{ invoice.payment.get_status_display }}</dd></div><div><dt>Method</dt><dd>{{ invoice.payment.get_payment_method_display }}</dd></div><div><dt>Amount Paid</dt><dd>{{ invoice.payment.amount }}</dd></div><div><dt>Transaction Ref</dt><dd>{{ invoice.payment.transaction_ref }}</dd></div></dl></div>
+
   {% endif %}
 
   <a href="{% url 'client-payment-dashboard' %}" class="btn btn-secondary mt-3">Back to Dashboard</a>

@@ -11,7 +11,7 @@
       <p class="page-subtitle">Log a new expense against a project</p>
     </div>
     <a href="{% url 'expense-list' %}" class="btn btn-ghost">
-      ← Back to Expenses
+      Back to Expenses
     </a>
   </div>
 </div>
@@ -36,7 +36,7 @@
         {% if form.non_field_errors %}
           {% for error in form.non_field_errors %}
           <div class="alert-inline alert-danger" style="margin-bottom:16px;">
-            ⚠️ {{ error }}
+            {{ error }}
           </div>
           {% endfor %}
         {% endif %}
@@ -152,7 +152,7 @@
       <div class="d-flex gap-2">
         <a href="{% url 'expense-list' %}" class="btn btn-ghost">Cancel</a>
         <button type="submit" form="expense-form" class="btn btn-primary">
-          💾 Save Expense
+          Save Expense
         </button>
       </div>
     </div>

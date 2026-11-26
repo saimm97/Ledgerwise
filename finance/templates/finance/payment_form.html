@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Record Payment for Invoice {{ object.invoice_no }}</h2>
+<div class="page-header"><div class="page-header-row"><div><h1 class="page-title">Record Payment for Invoice {{ object.invoice_no }}</h1></div></div></div>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
