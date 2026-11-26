@@ -3,110 +3,6 @@
 
 {% block content %}
 
-<style>
-  .stepper {
-    display: flex;
-    align-items: stretch;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--surface);
-    transition: border-color var(--transition), box-shadow var(--transition);
-  }
-  .stepper:focus-within {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(26,86,219,.12);
-  }
-  .stepper-btn {
-    background: var(--surface-2);
-    border: none;
-    border-right: 1px solid var(--border);
-    padding: 0 13px;
-    font-size: 16px;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: background var(--transition), color var(--transition);
-    font-family: inherit;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-  .stepper-btn:last-child {
-    border-right: none;
-    border-left: 1px solid var(--border);
-  }
-  .stepper-btn:hover {
-    background: var(--primary-light);
-    color: var(--primary);
-  }
-  .stepper input[type="number"] {
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    outline: none;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: 'DM Mono', monospace;
-    color: var(--text);
-    background: transparent;
-    text-align: center;
-  }
-  .stepper input::-webkit-inner-spin-button,
-  .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-
-  .form-card { animation: fadeUp .28s ease both; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .hours-hint {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-family: 'DM Mono', monospace;
-    margin-top: 5px;
-  }
-  .hours-hint-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--primary);
-    opacity: .45;
-  }
-
-  .session-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--success);
-    display: inline-block;
-    animation: pulse 2.5s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: .4; }
-  }
-</style>
-
-
-{% if messages %}
-  <div class="messages-container">
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }}" role="alert">
-        <span class="alert-icon">
-          {% if message.tags == 'success' %}✓{% elif message.tags == 'error' or message.tags == 'danger' %}✕{% elif message.tags == 'warning' %}⚠{% else %}ℹ{% endif %}
-        </span>
-        <div class="alert-body">
-          <div class="alert-text">{{ message }}</div>
-        </div>
-        <button class="alert-close" onclick="dismissAlert(this)" aria-label="Close">✕</button>
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-
-
 <div class="page-header">
   <div class="page-header-row">
     <div>
@@ -116,7 +12,7 @@
     <div class="d-flex items-center gap-2">
       <span class="badge badge-primary mono" id="live-date">—</span>
       <a href="{% url 'my_timesheets' %}" class="btn btn-ghost">
-      ← Back to Timesheets
+      Back to Timesheets
     </a>
     </div>
   </div>
@@ -174,7 +70,7 @@
   Reset
 </button>
       <button type="submit" form="timesheet-form" class="btn btn-primary">
-        Save Entry →
+        Save entry
       </button>
     </div>
   </div>

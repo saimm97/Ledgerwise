@@ -229,6 +229,13 @@ def generate_payroll(payroll_run: PayrollRun):
                     "gross_pay": gross_pay,
                     "deductions": Decimal("0.00"),
                     "net_pay": gross_pay,
+                    "job_title": employee.job_title,
+                    "salary_type": employee.salary_type,
+                    "base_salary": employee.base_salary,
+                    "hourly_rate": employee.hourly_rate,
+                    "hours_worked": total_hours,
+                    "expected_hours": expected_hours,
+                    "working_days": num_working_days,
                 },
             )
 

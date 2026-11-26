@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Payroll {{ run.period_start|date:"M Y" }}{% endblock %}
+
+{% block page_header %}
+<div class="page-header"><div class="page-header-row">
+  <div><h1 class="page-title">Payroll: {{ run.period_start|date:"d M Y" }} to {{ run.period_end|date:"d M Y" }}</h1>
+  <p class="page-subtitle">{{ run.get_status_display }}{% if run.processed_at %} · processed {{ run.processed_at|date:"d M Y H:i" }}{% endif %}</p></div>
+  <a class="btn btn-ghost" href="{% url 'payroll_list' %}">All payroll runs</a>
+</div></div>
+{% endblock %}
+
+{% block content %}
+<section class="grid grid-4 mb-4" aria-label="Run totals">
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">People paid</p><p class="stat-value">{{ items|length }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Hours paid</p><p class="stat-value">{{ total_hours|floatformat:2 }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Gross</p><p class="stat-value">{{ totals.gross|floatformat:2 }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Net</p><p class="stat-value">{{ totals.net|floatformat:2 }}</p>
+    <p class="text-muted" style="font-size:12px;">{{ totals.deductions|floatformat:2 }} deducted</p></div></div>
+</section>
+
+<div class="card"><div class="table-wrapper">
+<table class="table">
+  <thead><tr>
+    <th>Person</th><th>Pay basis</th><th class="text-right">Hours</th>
+    <th class="text-right">Gross</th><th class="text-right">Deductions</th><th class="text-right">Net</th><th></th>
+  </tr></thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td><strong>{{ item.employee.user.get_full_name|default:item.employee.user.email }}</strong>
+        <br><span class="text-muted" style="font-size:12px;">{{ item.job_title|default:item.employee.job_title }}</span></td>
+      <td>{{ item.pay_basis }}</td>
+      <td class="text-right">{{ item.hours_worked|floatformat:2 }}</td>
+      <td class="text-right">{{ item.gross_pay }}</td>
+      <td class="text-right">{{ item.deductions }}</td>
+      <td class="text-right"><strong>{{ item.net_pay }}</strong></td>
+      <td class="text-right">
+        <a class="btn btn-ghost btn-sm" href="{% url 'payslip' item.id %}">Payslip</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'payslip_pdf' item.id %}">PDF</a>
+        <a class="btn btn-ghost btn-sm" href="{% url 'employee_payroll_history' item.employee_id %}">History</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">No one was paid in this run. Payroll only includes approved, unpaid timesheets.</td></tr>
+    {% endfor %}
+  </tbody>
+  {% if items %}<tfoot><tr>
+    <th colspan="2">Total</th><th class="text-right">{{ total_hours|floatformat:2 }}</th>
+    <th class="text-right">{{ totals.gross|floatformat:2 }}</th><th class="text-right">{{ totals.deductions|floatformat:2 }}</th>
+    <th class="text-right">{{ totals.net|floatformat:2 }}</th><th></th>
+  </tr></tfoot>{% endif %}
+</table>
+</div></div>
+{% endblock %}

@@ -1,31 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Payroll Runs{% endblock %}
+{% block title %}Payroll history{% endblock %}
+
+{% block page_header %}
+<div class="page-header"><div class="page-header-row">
+  <div><h1 class="page-title">Payroll history</h1>
+  <p class="page-subtitle">Every payroll run, with totals. Open a run to see each person's full pay.</p></div>
+  <a class="btn btn-primary" href="{% url 'payroll_run_create' %}">Run payroll</a>
+</div></div>
+{% endblock %}
+
 {% block content %}
-<h2>Payroll Runs</h2>
+<div class="card"><div class="table-wrapper">
 <table class="table">
   <thead>
     <tr>
-      <th>Period Start</th>
-      <th>Period End</th>
+      <th>Period</th>
       <th>Status</th>
-      <th>Processed At</th>
-      <th>Created By</th>
+      <th class="text-right">People</th>
+      <th class="text-right">Gross</th>
+      <th class="text-right">Deductions</th>
+      <th class="text-right">Net</th>
+      <th>Processed</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     {% for run in payroll_runs %}
       <tr>
-        <td>{{ run.period_start }}</td>
-        <td>{{ run.period_end }}</td>
-        <td>{{ run.status }}</td>
-        <td>{{ run.processed_at }}</td>
-        <td>{{ run.created_by.email }}</td>
+        <td><strong>{{ run.period_start|date:"d M Y" }} to {{ run.period_end|date:"d M Y" }}</strong></td>
+        <td><span class="badge badge-status" data-status="{{ run.status }}">{{ run.get_status_display }}</span></td>
+        <td class="text-right">{{ run.people }}</td>
+        <td class="text-right">{{ run.gross|default:0 }}</td>
+        <td class="text-right">{{ run.deducted|default:0 }}</td>
+        <td class="text-right"><strong>{{ run.net|default:0 }}</strong></td>
+        <td>{{ run.processed_at|date:"d M Y H:i"|default:"-" }}</td>
+        <td class="text-right"><a class="btn btn-ghost btn-sm" href="{% url 'payroll_run_detail' run.id %}">Open</a></td>
       </tr>
     {% empty %}
-      <tr><td colspan="5">No payroll runs found.</td></tr>
+      <tr><td colspan="8" class="text-center text-muted" style="padding:32px;">No payroll runs yet.</td></tr>
     {% endfor %}
   </tbody>
 </table>
-
-<a class="btn btn-primary" href="{% url 'payroll:payroll_run_create' %}">Create Payroll Run</a>
+</div></div>
 {% endblock %}

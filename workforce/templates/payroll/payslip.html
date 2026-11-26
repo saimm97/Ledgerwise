@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Payslip {{ item.slip_no }}{% endblock %}
+
+{% block page_header %}
+<div class="page-header"><div class="page-header-row">
+  <div><h1 class="page-title">Payslip {{ item.slip_no }}</h1>
+  <p class="page-subtitle">{{ run.period_start|date:"d M Y" }} to {{ run.period_end|date:"d M Y" }}</p></div>
+  <div>
+    <a class="btn btn-ghost" href="{% url 'employee_payroll_history' employee.id %}">Pay history</a>
+    <a class="btn btn-primary" href="{% url 'payslip_pdf' item.id %}">Download PDF</a>
+  </div>
+</div></div>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-2 mb-4">
+  <div class="card" style="padding:20px 22px;">
+    <h2 class="card-title" style="margin-bottom:10px;">Employee</h2>
+    <p><strong>{{ person.get_full_name|default:person.email }}</strong></p>
+    <p class="text-muted">{{ item.job_title|default:employee.job_title }}</p>
+    <p class="text-muted">{{ person.email }}</p>
+    <p class="text-muted">Joined {{ employee.joining_date|date:"d M Y" }}</p>
+  </div>
+  <div class="card" style="padding:20px 22px;">
+    <h2 class="card-title" style="margin-bottom:10px;">Employer</h2>
+    <p><strong>{{ company.name }}</strong></p>
+    <p class="text-muted">{{ company.address }}</p>
+    <p class="text-muted">Issued {{ item.generated_at|date:"d M Y" }} · Currency {{ company.currency }}</p>
+  </div>
+</div>
+
+<div class="grid grid-2 mb-4">
+  <div class="card">
+    <div class="card-header"><h2 class="card-title">Earnings</h2></div>
+    <div class="table-wrapper"><table class="table"><tbody>
+      <tr><td>{{ item.pay_basis }}</td><td class="text-right">{{ item.gross_pay }}</td></tr>
+    </tbody><tfoot><tr><th>Gross pay</th><th class="text-right">{{ item.gross_pay }}</th></tr></tfoot></table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2 class="card-title">Deductions</h2></div>
+    <div class="table-wrapper"><table class="table"><tbody>
+      <tr><td>{% if item.deductions %}Deductions for the period{% else %}No deductions this period{% endif %}</td><td class="text-right">{{ item.deductions }}</td></tr>
+    </tbody><tfoot><tr><th>Total deductions</th><th class="text-right">{{ item.deductions }}</th></tr></tfoot></table></div>
+  </div>
+</div>
+
+<div class="card mb-4" style="padding:22px;">
+  <p class="stat-label">Net pay</p>
+  <p class="stat-value" style="font-size:34px;">{{ company.currency }} {{ item.net_pay }}</p>
+  <p class="text-muted">Gross {{ item.gross_pay }} minus deductions {{ item.deductions }}.</p>
+</div>
+
+<div class="grid grid-2 mb-4">
+  <div class="card">
+    <div class="card-header"><h2 class="card-title">Hours paid, by project</h2></div>
+    <div class="table-wrapper"><table class="table">
+      <thead><tr><th>Project</th><th class="text-right">Hours</th></tr></thead>
+      <tbody>
+        {% for row in by_project %}<tr><td>{{ row.project__name }}</td><td class="text-right">{{ row.hours|floatformat:2 }}</td></tr>
+        {% empty %}<tr><td colspan="2" class="text-muted">No approved timesheets found for this period.</td></tr>{% endfor %}
+      </tbody>
+      <tfoot><tr><th>Total</th><th class="text-right">{{ item.hours_worked|floatformat:2 }}</th></tr></tfoot>
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h2 class="card-title">Year to date ({{ run.period_start.year }})</h2></div>
+    <div class="table-wrapper"><table class="table"><tbody>
+      <tr><td>Gross</td><td class="text-right">{{ ytd.gross|floatformat:2 }}</td></tr>
+      <tr><td>Deductions</td><td class="text-right">{{ ytd.deductions|floatformat:2 }}</td></tr>
+      <tr><th>Net</th><th class="text-right">{{ ytd.net|floatformat:2 }}</th></tr>
+    </tbody></table></div>
+  </div>
+</div>
+{% endblock %}
