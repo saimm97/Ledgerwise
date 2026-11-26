@@ -320,8 +320,20 @@ class PayrollItem(models.Model):
 
     generated_at = models.DateTimeField(auto_now_add=True)
 
+    # --- Snapshot taken when the payslip is generated, so history never changes
+    #     even if the employee's title or pay rate is edited later. ---
+    slip_no = models.CharField(max_length=30, blank=True, default="")
+    job_title = models.CharField(max_length=100, blank=True, default="")
+    salary_type = models.CharField(max_length=20, blank=True, default="")
+    base_salary = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    hourly_rate = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    hours_worked = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    expected_hours = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    working_days = models.PositiveIntegerField(default=0)
+
     class Meta:
         unique_together = ("payroll_run", "employee")
+        ordering = ["-payroll_run__period_start"]
 
 
     def clean(self):
@@ -332,7 +344,21 @@ class PayrollItem(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean() 
         self.net_pay = self.gross_pay - self.deductions
+        if not self.slip_no:
+            self.slip_no = f"PS-{self.payroll_run.period_start:%Y%m}-{str(self.id)[:6].upper()}"
         super().save(*args, **kwargs)
+
+    @property
+    def pay_basis(self):
+        """Human readable line describing how gross pay was worked out."""
+        if self.salary_type == SalaryType.HOURLY and self.hourly_rate is not None:
+            return f"{self.hours_worked} h x {self.hourly_rate} per hour"
+        if self.salary_type == SalaryType.FIXED and self.base_salary is not None:
+            if self.expected_hours and self.hours_worked < self.expected_hours:
+                return (f"Monthly salary {self.base_salary}, pro-rated: "
+                        f"{self.hours_worked} of {self.expected_hours} expected hours")
+            return f"Monthly salary {self.base_salary} for {self.working_days} working days"
+        return "Gross pay"
 
     def __str__(self):
         return f"{self.employee} - Net: {self.net_pay}"

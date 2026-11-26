@@ -44,6 +44,17 @@ def logout_view(request):
 @login_required(login_url="login")
 def dashboard_view(request):
     company = request.user.company
+    if company is None:
+        # No company assigned yet: show an empty dashboard instead of crashing.
+        context = {
+            "company": None,
+            "active_employees": [],
+            "active_employees_count": 0,
+            "active_projects": [],
+            "active_projects_count": 0,
+        }
+        return render(request, "dashboard.html", context)
+
     active_employees = company.employees.filter(is_active=True)
     active_projects = company.projects.filter(status="active")
 

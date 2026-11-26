@@ -1,15 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Payments for Invoice {{ invoice.invoice_no }}</h2>
-<p><strong>Project:</strong> {{ invoice.project.name }}</p>
-<p><strong>Client:</strong> {{ invoice.project.client.name }}</p>
-<p><strong>Total Amount:</strong> {{ invoice.total_amount|floatformat:2 }}</p>
-<p><strong>Amount Paid:</strong> {{ invoice.amount_paid|floatformat:2 }}</p>
-<p><strong>Balance Due:</strong> {{ invoice.balance_due|floatformat:2 }}</p>
+<div class="page-header"><div class="page-header-row"><div><h1 class="page-title">Payments for Invoice {{ invoice.invoice_no }}</h1></div></div></div>
+<div class="card mb-4"><dl class="kv card-body"><div><dt>Project</dt><dd>{{ invoice.project.name }}</dd></div><div><dt>Client</dt><dd>{{ invoice.project.client.name }}</dd></div><div><dt>Total Amount</dt><dd>{{ invoice.total_amount|floatformat:2 }}</dd></div><div><dt>Amount Paid</dt><dd>{{ invoice.amount_paid|floatformat:2 }}</dd></div><div><dt>Balance Due</dt><dd>{{ invoice.balance_due|floatformat:2 }}</dd></div></dl></div>
 
 <a href="{% url 'project-payment-add' invoice.id %}" class="btn btn-success mb-3">+ Add Payment</a>
 
-<table class="table table-bordered">
+<div class="card mb-4"><table class="table">
   <thead>
     <tr>
       <th>Payment Amount</th>
@@ -36,7 +32,7 @@
     </tr>
     {% endfor %}
   </tbody>
-</table>
+</table></div>
 
 <a href="{% url 'project-payment-invoice-list' %}" class="btn btn-secondary mt-3">Back to Invoices</a>
 {% endblock %}

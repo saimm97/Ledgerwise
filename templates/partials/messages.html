@@ -1,0 +1,13 @@
+{% if messages %}
+<div class="messages-container" role="status" aria-live="polite">
+  {% for message in messages %}
+  <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'info' %}alert-info{% else %}alert-success{% endif %}" data-auto-dismiss="6000">
+    <span class="alert-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></svg>
+    </span>
+    <div class="alert-body">{{ message }}</div>
+    <button type="button" class="alert-close" onclick="dismissAlert(this.closest('.alert'))" aria-label="Dismiss">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

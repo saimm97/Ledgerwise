@@ -3,7 +3,7 @@
 
 <div class="container">
 
-    <h2>Project: {{ project.name }}</h2>
+    <div class="page-header"><div class="page-header-row"><div><h1 class="page-title">Project: {{ project.name }}</h1></div><a href="{% url 'project_timeline' project.id %}" class="btn btn-primary">Monthly hours &amp; invoices</a></div></div>
 
     <div class="card mb-3">
         <p><strong>Company:</strong> {{ project.company.name }}</p>
@@ -13,11 +13,12 @@
         <p>
     <strong>Profit/Loss Percentage:</strong>
     {% if profit_loss_percentage >= 0 %}
-        <span style="color:green;">{{ profit_loss_percentage }}%</span>
+        <span class="profit">{{ profit_loss_percentage }}%</span>
     {% else %}
-        <span style="color:red;">{{ profit_loss_percentage }}%</span>
+        <span class="loss">{{ profit_loss_percentage }}%</span>
     {% endif %}
 </p>
+        <p><strong>Total Hours Logged:</strong> {{ total_hours|floatformat:2 }}</p>
         <p><strong>Start Date:</strong> {{ project.start_date }}</p>
         <p><strong>End Date:</strong> {{ project.end_date }}</p>
 
@@ -46,17 +47,21 @@
                 <tr>
                     <th>Employee</th>
                     <th>Role in Project</th>
+                    <th class="text-right">Hours logged</th>
+                    <th class="text-right">Approved</th>
                 </tr>
             </thead>
             <tbody>
-                {% for assignment in project.employee_assignments.all %}
+                {% for assignment, hours, approved in assignments %}
                 <tr>
                     <td>{{ assignment.employee }}</td>
                     <td>{{ assignment.role_in_project }}</td>
+                    <td class="text-right">{{ hours|floatformat:2 }}</td>
+                    <td class="text-right">{{ approved|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="2">No employees assigned to this project.</td>
+                    <td colspan="4">No employees assigned to this project.</td>
                 </tr>
                 {% endfor %}
             </tbody>

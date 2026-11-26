@@ -1,29 +1,55 @@
 {% extends "base.html" %}
 {% block title %}My Payroll{% endblock %}
+
+{% block page_header %}
+<div class="page-header"><div class="page-header-row"><div>
+  <h1 class="page-title">My payroll</h1>
+  <p class="page-subtitle">Every payslip you have been issued. Open one to see how it was worked out, or download it as a PDF.</p>
+</div></div></div>
+{% endblock %}
+
 {% block content %}
-<h2>My Payroll</h2>
+{% if payroll_items %}
+<section class="grid grid-3 mb-4" aria-label="Totals">
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Net pay in {{ year }}</p><p class="stat-value">{{ this_year.net|floatformat:2 }}</p>
+    <p class="text-muted" style="font-size:12px;">Gross {{ this_year.gross|floatformat:2 }} · Deductions {{ this_year.deductions|floatformat:2 }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Net pay, all time</p><p class="stat-value">{{ lifetime.net|floatformat:2 }}</p>
+    <p class="text-muted" style="font-size:12px;">Gross {{ lifetime.gross|floatformat:2 }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Payslips</p><p class="stat-value">{{ payroll_items|length }}</p></div></div>
+</section>
+{% endif %}
+
+<div class="card"><div class="table-wrapper">
 <table class="table">
   <thead>
     <tr>
+      <th>Payslip</th>
       <th>Period</th>
-      <th>Gross Pay</th>
-      <th>Deductions</th>
-      <th>Net Pay</th>
-      <th>Generated At</th>
+      <th class="text-right">Hours</th>
+      <th class="text-right">Gross pay</th>
+      <th class="text-right">Deductions</th>
+      <th class="text-right">Net pay</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     {% for item in payroll_items %}
       <tr>
-        <td>{{ item.payroll_run.period_start }} - {{ item.payroll_run.period_end }}</td>
-        <td>{{ item.gross_pay }}</td>
-        <td>{{ item.deductions }}</td>
-        <td>{{ item.net_pay }}</td>
-        <td>{{ item.generated_at }}</td>
+        <td>{{ item.slip_no|default:"-" }}</td>
+        <td>{{ item.payroll_run.period_start|date:"d M Y" }} to {{ item.payroll_run.period_end|date:"d M Y" }}</td>
+        <td class="text-right">{{ item.hours_worked|floatformat:2 }}</td>
+        <td class="text-right">{{ item.gross_pay }}</td>
+        <td class="text-right">{{ item.deductions }}</td>
+        <td class="text-right"><strong>{{ item.net_pay }}</strong></td>
+        <td class="text-right">
+          <a href="{% url 'payslip' item.id %}" class="btn btn-ghost btn-sm">View</a>
+          <a href="{% url 'payslip_pdf' item.id %}" class="btn btn-primary btn-sm">Download PDF</a>
+        </td>
       </tr>
     {% empty %}
-      <tr><td colspan="5">No payroll found for your account.</td></tr>
+      <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">No payslips yet. They appear here after payroll is run for a period you worked in.</td></tr>
     {% endfor %}
   </tbody>
 </table>
+</div></div>
 {% endblock %}

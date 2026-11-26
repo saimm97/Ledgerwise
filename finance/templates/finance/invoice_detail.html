@@ -3,14 +3,11 @@
 {% block title %}Invoice {{ invoice.invoice_no }}{% endblock %}
 
 {% block content %}
-<h2>Invoice #{{ invoice.invoice_no }}</h2>
-<p>Company: {{ invoice.company.name|default:"N/A" }}</p>
-<p>Client: {{ invoice.client.name|default:"N/A" }}</p>
-<p>Project: {{ invoice.project.name|default:"Company" }}</p>
-<p>Issue Date: {{ invoice.issue_date|default:"Not Set" }}</p>
-<p>Due Date: {{ invoice.due_date|default:"Not Set" }}</p>
+<div class="page-header"><div class="page-header-row"><div><h1 class="page-title">Invoice #{{ invoice.invoice_no }}</h1></div></div></div>
+<div class="card mb-4"><dl class="kv card-body"><div><dt>Company</dt><dd>{{ invoice.company.name|default:"N/A" }}</dd></div><div><dt>Client</dt><dd>{{ invoice.client.name|default:"N/A" }}</dd></div><div><dt>Project</dt><dd>{{ invoice.project.name|default:"Company" }}</dd></div><div><dt>Issue Date</dt><dd>{{ invoice.issue_date|default:"Not Set" }}</dd></div><div><dt>Due Date</dt><dd>{{ invoice.due_date|default:"Not Set" }}</dd></div></dl></div>
 
-<table>
+
+<div class="card mb-4"><table>
   <thead>
     <tr>
       <th>Description</th>
@@ -31,8 +28,7 @@
     </tr>
     {% endfor %}
   </tbody>
-</table>
+</table></div>
 
-<p>Subtotal: ${{ invoice.subtotal|default:"0.00" }}</p>
-<p>Total: ${{ invoice.total_amount|default:"0.00" }}</p>
+<div class="card"><dl class="kv card-body"><div><dt>Subtotal</dt><dd>${{ invoice.subtotal|default:"0.00" }}</dd></div><div><dt>Total</dt><dd style="font-size:20px;">${{ invoice.total_amount|default:"0.00" }}</dd></div></dl></div>
 {% endblock %}

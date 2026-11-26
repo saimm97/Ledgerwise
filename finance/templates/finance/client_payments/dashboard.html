@@ -4,24 +4,18 @@
 {% block content %}
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Client Payments Dashboard</h2>
+    <div class="page-header"><div class="page-header-row"><div><h1 class="page-title">Client Payments Dashboard</h1></div></div></div>
     <a href="{% url 'client-invoice-add' %}" class="btn btn-primary">
       + Add Invoice
     </a>
   </div>
-
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-success">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
 
   <div class="card">
     <div class="card-header">
       Ongoing Client Payments
     </div>
     <div class="card-body table-responsive">
-      <table class="table table-bordered table-hover align-middle">
+      <table class="table">
         <thead>
           <tr>
             <th>Invoice No</th>
@@ -55,7 +49,7 @@
             <td>{{ invoice.amount_paid }}</td>
             <td>{{ invoice.balance_due }}</td>
             <td>
-              <span class="badge bg-info text-dark">{{ invoice.get_status_display }}</span>
+              <span class="badge badge-info">{{ invoice.get_status_display }}</span>
             </td>
             <td>{{ invoice.due_date }}</td>
             <td>
@@ -68,11 +62,11 @@
               {% endif %}
             </td>
             <td>
-              <a href="{% url 'client-invoice-detail' invoice.id %}" class="btn btn-sm btn-outline-primary">
+              <a href="{% url 'client-invoice-detail' invoice.id %}" class="btn btn-sm btn-secondary">
                 View
               </a>
               {% if payment %}
-              <a href="{% url 'client-payment-update' payment.id %}" class="btn btn-sm btn-outline-success">
+              <a href="{% url 'client-payment-update' payment.id %}" class="btn btn-sm btn-secondary">
                 Update Payment
               </a>
               {% endif %}

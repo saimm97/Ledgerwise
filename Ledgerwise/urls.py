@@ -1,5 +1,5 @@
 """
-URL configuration for BudgetBridge project.
+URL configuration for Ledgerwise project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic.base import RedirectView
-# from BudgetBridge import settings
+# from Ledgerwise import settings
 from django.conf import settings 
 from django.conf.urls.static import static
 from accounts.views import landing_view
@@ -37,10 +37,10 @@ urlpatterns = [
 ]
 
 
-handler404 = "BudgetBridge.views.handler404"
-handler500 = "BudgetBridge.views.handler500"
-handler403 = "BudgetBridge.views.handler403"
-handler400 = "BudgetBridge.views.handler400"
+handler404 = "Ledgerwise.views.handler404"
+handler500 = "Ledgerwise.views.handler500"
+handler403 = "Ledgerwise.views.handler403"
+handler400 = "Ledgerwise.views.handler400"
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

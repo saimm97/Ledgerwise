@@ -4,7 +4,7 @@
 
 <div class="container">
 
-    <h2>{{ company.name }} - Expenses</h2>
+    <div class="page-header"><div class="page-header-row"><div><h1 class="page-title">{{ company.name }} - Expenses</h1></div></div></div>
 
     <div class="mb-3">
         <a href="{% url 'expense-add' %}" class="btn btn-primary">Add Expense</a>
@@ -31,7 +31,7 @@
                     <td>{{ expense.category }}</td>
                     <td>{{ expense.amount }} {{ expense.currency }}</td>
                     <td>
-                        <span class="badge badge-status">
+                        <span class="badge badge-status" data-status="{{ expense.status|lower }}">
                             {{ expense.status|title }}
                         </span>
                     </td>

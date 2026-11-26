@@ -48,4 +48,4 @@ EXPOSE 8000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-CMD ["gunicorn", "BudgetBridge.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "Ledgerwise.wsgi:application", "--bind", "0.0.0.0:8000"]

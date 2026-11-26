@@ -1,0 +1,14 @@
+<script>
+  /* Apply the saved theme before first paint so there is no flash. Dark is the default. */
+  (function () {
+    var t = 'dark';
+    try { t = localStorage.getItem('lw-theme') || 'dark'; } catch (e) {}
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  function toggleTheme() {
+    var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('lw-theme', next); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('themechange', { detail: next }));
+  }
+</script>

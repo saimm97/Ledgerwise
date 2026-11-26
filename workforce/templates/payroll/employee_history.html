@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Pay history{% endblock %}
+
+{% block page_header %}
+<div class="page-header"><div class="page-header-row"><div>
+  <h1 class="page-title">Pay history: {{ employee.user.get_full_name|default:employee.user.email }}</h1>
+  <p class="page-subtitle">{{ employee.job_title }} · every payslip issued, newest first.</p>
+</div></div></div>
+{% endblock %}
+
+{% block content %}
+<section class="grid grid-3 mb-4">
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Gross, all time</p><p class="stat-value">{{ lifetime.gross|floatformat:2 }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Deductions, all time</p><p class="stat-value">{{ lifetime.deductions|floatformat:2 }}</p></div></div>
+  <div class="kpi-card"><div class="stat-info"><p class="stat-label">Net, all time</p><p class="stat-value">{{ lifetime.net|floatformat:2 }}</p></div></div>
+</section>
+<div class="card"><div class="table-wrapper">
+<table class="table">
+  <thead><tr><th>Payslip</th><th>Period</th><th>Pay basis</th><th class="text-right">Gross</th><th class="text-right">Deductions</th><th class="text-right">Net</th><th></th></tr></thead>
+  <tbody>
+    {% for item in payroll_items %}
+    <tr>
+      <td>{{ item.slip_no|default:"-" }}</td>
+      <td>{{ item.payroll_run.period_start|date:"d M Y" }} to {{ item.payroll_run.period_end|date:"d M Y" }}</td>
+      <td>{{ item.pay_basis }}</td>
+      <td class="text-right">{{ item.gross_pay }}</td><td class="text-right">{{ item.deductions }}</td>
+      <td class="text-right"><strong>{{ item.net_pay }}</strong></td>
+      <td class="text-right"><a class="btn btn-ghost btn-sm" href="{% url 'payslip' item.id %}">View</a>
+        <a class="btn btn-primary btn-sm" href="{% url 'payslip_pdf' item.id %}">PDF</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" class="text-center text-muted" style="padding:32px;">No payslips have been issued yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock %}

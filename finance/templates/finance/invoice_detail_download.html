@@ -4,90 +4,42 @@
   <meta charset="UTF-8">
   <title>Invoice {{ invoice.invoice_no }}</title>
   <style>
-
-    body {
-      font-family: Arial, sans-serif;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      width: 90%;
-      margin: 30px auto;
-      padding: 20px;
-      border: 1px solid #eee;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-
-    h1, h2 {
-      color: #222;
-    }
-
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 40px;
-    }
-    .header h1 {
-      margin: 0;
-    }
-
-    /* Company & Client Info */
-    .info {
-      margin-bottom: 30px;
-    }
-    .info p {
-      margin: 3px 0;
-    }
-
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    table thead {
-      background-color: #f5f5f5;
-    }
-    table th, table td {
-      border: 1px solid #ddd;
-      padding: 10px;
-      text-align: left;
-      font-size: 14px;
-    }
-    table th {
-      background-color: #f0f0f0;
-    }
-
-    /* Totals */
-    .totals {
-      text-align: right;
-      margin-top: 20px;
-    }
-    .totals p {
-      font-size: 16px;
-      margin: 5px 0;
-    }
-
-    /* Footer */
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: #999;
-      margin-top: 50px;
-    }
+    @page { size: A4; margin: 18mm 16mm; }
+    body { font-family: Helvetica, Arial, sans-serif; color: #14173a; margin: 0; font-size: 13px; line-height: 1.5; }
+    .brandbar { border-top: 8px solid #4f3fe0; padding-top: 18px; }
+    table.layout { width: 100%; border-collapse: collapse; }
+    table.layout td { vertical-align: top; padding: 0; border: 0; }
+    .brand { font-size: 13px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #4338ca; margin: 0 0 6px; }
+    h1 { font-size: 28px; margin: 0; color: #14173a; }
+    .meta { text-align: right; color: #565c86; }
+    .meta p { margin: 2px 0; }
+    .meta strong { color: #14173a; }
+    .info { margin: 28px 0 22px; padding: 14px 16px; background: #f7f8fd; border: 1px solid #e1e4f3; border-radius: 8px; }
+    .info p { margin: 3px 0; color: #565c86; }
+    .info strong { color: #14173a; }
+    table.items { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+    table.items th { text-align: left; background: #14173a; color: #ffffff; padding: 9px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+    table.items td { padding: 10px; border-bottom: 1px solid #e1e4f3; font-size: 13px; }
+    .num { text-align: right; }
+    .totals { margin-top: 12px; text-align: right; }
+    .totals p { margin: 4px 0; color: #565c86; }
+    .totals .grand { font-size: 18px; font-weight: bold; color: #14173a; }
+    .footer { text-align: center; font-size: 11px; color: #7e86ad; margin-top: 48px; border-top: 1px solid #e1e4f3; padding-top: 12px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>Invoice #{{ invoice.invoice_no }}</h1>
-      <div>
-        <p><strong>Issue Date:</strong> {{ invoice.issue_date|default:"Not Set" }}</p>
-        <p><strong>Due Date:</strong> {{ invoice.due_date|default:"Not Set" }}</p>
-      </div>
+  <div class="wrap">
+    <div class="brandbar">
+      <table class="layout"><tr>
+        <td>
+          <p class="brand">Ledgerwise</p>
+          <h1>Invoice #{{ invoice.invoice_no }}</h1>
+        </td>
+        <td class="meta">
+          <p><strong>Issue Date:</strong> {{ invoice.issue_date|default:"Not Set" }}</p>
+          <p><strong>Due Date:</strong> {{ invoice.due_date|default:"Not Set" }}</p>
+        </td>
+      </tr></table>
     </div>
 
     <div class="info">
@@ -96,14 +48,14 @@
       <p><strong>Project:</strong> {{ invoice.project.name|default:"Company Expense" }}</p>
     </div>
 
-    <table>
+    <table class="items">
       <thead>
         <tr>
           <th>Description</th>
           <th>Category</th>
-          <th>Quantity</th>
-          <th>Unit Price</th>
-          <th>Total</th>
+          <th class="num">Quantity</th>
+          <th class="num">Unit Price</th>
+          <th class="num">Total</th>
         </tr>
       </thead>
       <tbody>
@@ -111,9 +63,9 @@
         <tr>
           <td>{{ item.description }}</td>
           <td>{{ item.category|default:"-" }}</td>
-          <td>{{ item.quantity|default:"0" }}</td>
-          <td>${{ item.unit_price|floatformat:2 }}</td>
-          <td>${{ item.total|floatformat:2 }}</td>
+          <td class="num">{{ item.quantity|default:"0" }}</td>
+          <td class="num">${{ item.unit_price|floatformat:2 }}</td>
+          <td class="num">${{ item.total|floatformat:2 }}</td>
         </tr>
         {% endfor %}
       </tbody>
@@ -121,11 +73,11 @@
 
     <div class="totals">
       <p><strong>Subtotal:</strong> ${{ invoice.subtotal|floatformat:2 }}</p>
-      <p><strong>Total:</strong> ${{ invoice.total_amount|floatformat:2 }}</p>
+      <p class="grand"><strong>Total:</strong> ${{ invoice.total_amount|floatformat:2 }}</p>
     </div>
 
     <div class="footer">
-      © 2026 BUDGETBRIDGE — Software House Finance Management
+      Ledgerwise &middot; Finance management
     </div>
   </div>
 </body>

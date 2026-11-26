@@ -1,98 +1,114 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Reports{% endblock %}
 
 {% block page_header %}
 <div class="page-header">
-  <h1 class="page-title">Good morning, {{ request.user.first_name|default:"there" }} 👋</h1>
-  <p class="page-subtitle">Here's an overview of your finances today.</p>
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">Financial overview</h1>
+      <p class="page-subtitle">Revenue, expenses, invoices and project budgets at a glance.</p>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-
-  <!-- KPI Cards -->
-  <div class="dashboard-stats-grid">
-    <div class="kpi-card">
-      <h3>Total Revenue</h3>
-      <p>{{ total_revenue|default:0|floatformat:2 }}</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Total Expenses</h3>
-      <p>{{ total_expenses|default:0|floatformat:2 }}</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Paid Invoices</h3>
-      <p>{{ paid_invoices_count|default:0 }}</p>
-    </div>
-    <div class="kpi-card">
-      <h3>Overdue Invoices</h3>
-      <p>{{ overdue_count|default:0 }}</p>
-    </div>
+<section class="grid grid-4 mb-4" aria-label="Key figures">
+  <div class="kpi-card">
+    <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></div>
+    <div class="stat-info"><p class="stat-label">Total revenue</p><p class="stat-value">{{ total_revenue|default:0|floatformat:2 }}</p></div>
   </div>
+  <div class="kpi-card">
+    <div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg></div>
+    <div class="stat-info"><p class="stat-label">Total expenses</p><p class="stat-value">{{ total_expenses|default:0|floatformat:2 }}</p></div>
+  </div>
+  <div class="kpi-card">
+    <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"/></svg></div>
+    <div class="stat-info"><p class="stat-label">Paid invoices</p><p class="stat-value">{{ paid_invoices_count|default:0 }}</p></div>
+  </div>
+  <div class="kpi-card">
+    <div class="stat-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5M12 17h.01M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+    <div class="stat-info"><p class="stat-label">Overdue invoices</p><p class="stat-value">{{ overdue_count|default:0 }}</p></div>
+  </div>
+</section>
 
-  <!-- Project Budget Chart -->
-  <section>
-    <h2>Project Budgets</h2>
-    <canvas id="projectBudgetChart" height="150"></canvas>
+<div class="grid grid-2 mb-4" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);">
+  <section class="card">
+    <div class="card-header"><div><p class="card-title">Project budgets</p><p class="card-subtitle">Share of each project budget used</p></div></div>
+    <div class="card-body chart-box"><canvas id="projectBudgetChart" height="150" role="img" aria-label="Bar chart of budget used per project"></canvas></div>
   </section>
-
-  <!-- Financial Overview Pie Chart -->
-  <section>
-    <h2>Financial Overview</h2>
-    <canvas id="financialOverviewChart" height="150"></canvas>
+  <section class="card">
+    <div class="card-header"><div><p class="card-title">Revenue and expenses</p><p class="card-subtitle">Totals compared</p></div></div>
+    <div class="card-body chart-box"><canvas id="financialOverviewChart" height="220" role="img" aria-label="Doughnut chart of revenue against expenses"></canvas></div>
   </section>
+</div>
 
-  <!-- Recent Invoices -->
-  <section>
-    <h2>Recent Invoices</h2>
-    <table class="table">
+<section class="card">
+  <div class="card-header"><div><p class="card-title">Recent invoices</p></div></div>
+  <div class="table-wrapper">
+    <table>
       <thead>
-        <tr>
-          <th>No</th>
-          <th>Client</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Date</th>
-        </tr>
+        <tr><th>No</th><th>Client</th><th style="text-align:right;">Amount</th><th>Status</th><th>Date</th></tr>
       </thead>
       <tbody>
         {% for inv in recent_invoices %}
         <tr>
-          <td>{{ inv.number }}</td>
+          <td style="font-weight:600;">{{ inv.number }}</td>
           <td>{{ inv.client_name }}</td>
-          <td>{{ inv.amount|default:0|floatformat:2 }}</td>
-          <td>{{ inv.status }}</td>
-          <td>{{ inv.issue_date }}</td>
+          <td class="num" style="text-align:right;font-weight:600;">{{ inv.amount|default:0|floatformat:2 }}</td>
+          <td><span class="badge badge-status" data-status="{{ inv.status|lower }}">{{ inv.status }}</span></td>
+          <td class="td-muted">{{ inv.issue_date }}</td>
         </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted" style="padding:32px;">No invoices yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>
-  </section>
-
-</div>
+  </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Project Budget Chart
-  const projectLabels = [{% for project in projects_budget %}"{{ project.name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
-  const projectData = [{% for project in projects_budget %}{{ project.spent_pct|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
-  new Chart(document.getElementById('projectBudgetChart').getContext('2d'), {
-    type: 'bar',
-    data: { labels: projectLabels, datasets: [{ label: '% Budget Used', data: projectData, backgroundColor: projectData.map(v => v>90?'#e74c3c':v>70?'#f1c40f':'#2ecc71') }] },
-    options: { responsive:true, scales:{y:{beginAtZero:true,max:100,ticks:{callback:val=>val+'%'}}} }
-  });
+  var projectLabels = [{% for project in projects_budget %}"{{ project.name|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+  var projectData = [{% for project in projects_budget %}{{ project.spent_pct|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+  var financialData = [{{ total_revenue|default:0|floatformat:2 }}, {{ total_expenses|default:0|floatformat:2 }}];
+  var budgetChart, overviewChart;
 
-  // Financial Overview Pie Chart
-  const financialData = [{{ total_revenue|default:0|floatformat:2 }}, {{ total_expenses|default:0|floatformat:2 }}];
-  new Chart(document.getElementById('financialOverviewChart').getContext('2d'), {
-    type: 'pie',
-    data: { labels: ['Revenue','Expenses'], datasets: [{ data: financialData, backgroundColor: ['#3498db','#e74c3c'] }] },
-    options: { responsive:true }
-  });
+  function themeColors() {
+    var cs = getComputedStyle(document.documentElement);
+    function v(n) { return cs.getPropertyValue(n).trim(); }
+    return { text: v('--text-muted'), grid: v('--border'), surface: v('--surface'),
+             ok: v('--success'), warn: v('--warning'), bad: v('--danger'), primary: v('--primary'), accent: v('--accent') };
+  }
+
+  function drawCharts() {
+    var c = themeColors();
+    if (budgetChart) budgetChart.destroy();
+    if (overviewChart) overviewChart.destroy();
+    Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+    Chart.defaults.color = c.text;
+
+    budgetChart = new Chart(document.getElementById('projectBudgetChart').getContext('2d'), {
+      type: 'bar',
+      data: { labels: projectLabels, datasets: [{ label: '% budget used', data: projectData, borderRadius: 8, maxBarThickness: 44,
+        backgroundColor: projectData.map(function (x) { return x > 90 ? c.bad : x > 70 ? c.warn : c.ok; }) }] },
+      options: { responsive: true, plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, max: 100, grid: { color: c.grid }, ticks: { callback: function (val) { return val + '%'; } } },
+                  x: { grid: { display: false } } } }
+    });
+
+    overviewChart = new Chart(document.getElementById('financialOverviewChart').getContext('2d'), {
+      type: 'doughnut',
+      data: { labels: ['Revenue', 'Expenses'], datasets: [{ data: financialData, backgroundColor: [c.primary, c.accent], borderColor: c.surface, borderWidth: 3 }] },
+      options: { responsive: true, cutout: '68%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 18 } } } }
+    });
+  }
+
+  drawCharts();
+  document.addEventListener('themechange', drawCharts);
 </script>
 {% endblock %}

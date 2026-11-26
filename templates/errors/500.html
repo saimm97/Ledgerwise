@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Server Error{% endblock %}
+{% block title %}Something went wrong{% endblock %}
 
 {% block content %}
-<div class="error-page text-center py-16">
-    <h1 class="text-6xl font-bold text-red-600 mb-4">500</h1>
-    <h2 class="text-3xl font-semibold mb-4">Something Went Wrong</h2>
-    <p class="text-gray-600 mb-6">We’re working to fix this. Please try again later or go back home.</p>
-    <a href="{% url 'home' %}" class="btn btn-primary">Go Back Home</a>
+<div class="empty-state" style="padding:72px 20px;">
+  <div class="error-code">500</div>
+  <h1 style="font-size:26px;margin:14px 0 8px;">Something went wrong</h1>
+  <p class="text-muted" style="max-width:420px;margin:0 auto 24px;">An unexpected error occurred on our side. Please try again in a moment.</p>
+  <a href="{% url 'home' %}" class="btn btn-primary">Go back home</a>
 </div>
 {% endblock %}
