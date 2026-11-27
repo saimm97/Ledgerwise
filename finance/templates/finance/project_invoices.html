@@ -53,23 +53,4 @@
     </table>
 </div>
 
-<!-- JS for Redirecting on Project Select -->
-<script>
-document.getElementById("project-select").addEventListener("change", function() {
-    const projectId = this.value;
-    const companyId = "{{ company.id }}";  // make sure 'company' is in template context
-
-    if (projectId) {
-        // URL for invoices of specific project
-        window.location.href = "{% url 'project_invoices' company_id='COMPANY_ID_PLACEHOLDER' project_id='PROJECT_ID_PLACEHOLDER' %}"
-            .replace("COMPANY_ID_PLACEHOLDER", companyId)
-            .replace("PROJECT_ID_PLACEHOLDER", projectId);
-    } else {
-        // URL for all invoices of the company
-        window.location.href = "{% url 'company_invoices' company_id='COMPANY_ID_PLACEHOLDER' %}"
-            .replace("COMPANY_ID_PLACEHOLDER", companyId);
-    }
-});
-</script>
-
 {% endblock content %}

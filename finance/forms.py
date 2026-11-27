@@ -33,11 +33,15 @@ class ExpenseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         self.fields["project"].queryset = Project.objects.filter(
-            employee_assignments__employee=user.employee_profile
+            company_id=user.company_id,
+            employee_assignments__employee=user.employee_profile,
         )
         self.fields["category"].queryset = self.fields["category"].queryset.filter(
-            is_active=True
+            company_id=user.company_id, is_active=True
         )
+        # Let the model's own checks (same company, amount, date) run during form validation.
+        self.instance.company_id = user.company_id
+        self.instance.employee = user.employee_profile
 
        
         for field in self.fields.values():
@@ -56,10 +60,13 @@ class CompanyExpenseForm(forms.ModelForm):
         self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
-        if self.user and hasattr(self.user, "company"):
-            self.fields["category"].queryset = self.fields["category"].queryset.filter(
-                company=self.user.company
-            )    
+        company_id = self.user.company_id if self.user else None
+        self.fields["category"].queryset = self.fields["category"].queryset.filter(
+            company_id=company_id, is_active=True
+        )
+        if self.user:
+            self.instance.company_id = company_id
+            self.instance.employee = getattr(self.user, "employee_profile", None)
 
 
 
@@ -115,7 +122,8 @@ class ProjectPaymentInvoiceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
-        self.fields["project"].queryset = Project.objects.filter(company=user.company)
+        self.fields["project"].queryset = Project.objects.filter(company_id=user.company_id)
+        self.instance.company_id = user.company_id
 
     def clean_amount(self):
         amount = self.cleaned_data.get("amount")
@@ -143,14 +151,5 @@ class PaymentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.invoice = kwargs.pop("invoice")
         super().__init__(*args, **kwargs)
-
-    def clean_amount(self):
-        amount = self.cleaned_data.get("amount")
-        confirmed_total = sum(
-            p.amount for p in self.invoice.payments.filter(status="confirmed")
-        )
-        if self.cleaned_data.get("status") == "confirmed":
-            if confirmed_total + amount > self.invoice.total_amount:
-                raise forms.ValidationError("Payment exceeds invoice total.")
-        return amount
-
+        self.instance.invoice = self.invoice
+        self.instance.company_id = self.invoice.company_id

@@ -11,6 +11,8 @@ def send_invoice_email(invoice_id):
     
     if invoice.invoice_sent:
         return "Already sent"
+    if not (invoice.client and invoice.client.email and invoice.project):
+        return "Skipped: invoice has no client email or project"
 
     html_content = render_to_string(
         "finance/email_invoice.html",
@@ -28,7 +30,7 @@ def send_invoice_email(invoice_id):
 
     email = EmailMultiAlternatives(subject, "", from_email, to_email)
     email.attach_alternative(html_content, "text/html")
-    email.send(fail_silently=True)
+    email.send()  # a failure must raise, so the invoice is not marked as sent
 
     
     invoice.invoice_sent = True
@@ -43,6 +45,8 @@ def send_payment_invoice_email(invoice_id):
 
     if invoice.invoice_sent:
         return "Already sent"
+    if not (invoice.project.client and invoice.project.client.email):
+        return f"Skipped: project of invoice {invoice.invoice_no} has no client email"
 
     # Render the email content using the new detailed template
     html_content = render_to_string(
@@ -61,7 +65,7 @@ def send_payment_invoice_email(invoice_id):
     # Send the email
     email = EmailMultiAlternatives(subject, "", from_email, to_email)
     email.attach_alternative(html_content, "text/html")
-    email.send(fail_silently=True)
+    email.send()  # a failure must raise, so the invoice is not marked as sent
 
     # Mark invoice as sent
     invoice.invoice_sent = True

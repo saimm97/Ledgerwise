@@ -4,7 +4,6 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.conf import settings
-from django.db.models import Sum
 from django.utils import timezone
 from operations.models import Company, Project, Client
 
@@ -97,7 +96,10 @@ class Expense(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
-    
+     if self.amount is not None and self.amount <= 0:
+        raise ValidationError({"amount": "Amount must be greater than zero."})
+     if self.expense_date and self.expense_date > timezone.localdate():
+        raise ValidationError({"expense_date": "Expense date cannot be in the future."})
 
      if self.project_id and self.company_id:
         if self.project.company_id != self.company_id:
@@ -219,31 +221,6 @@ class Invoice(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    @property
-    def amount_paid(self):
-        return self.payments.filter(
-            status="confirmed"
-        ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
-
-    @property
-    def balance_due(self):
-        return max(self.total_amount - self.amount_paid, Decimal("0.00"))
-
-    def update_payment_status(self):
-        paid = self.amount_paid
-
-        if paid <= Decimal("0.00"):
-            self.status = InvoiceStatus.SENT if self.invoice_sent else InvoiceStatus.DRAFT
-        elif paid < self.total_amount:
-            self.status = InvoiceStatus.PARTIAL
-        else:
-            self.status = InvoiceStatus.PAID
-
-        if self.status != InvoiceStatus.PAID and self.due_date < timezone.now().date():
-            self.status = InvoiceStatus.OVERDUE
-
-        self.save(update_fields=["status"])
-   
 
 class InvoiceItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -305,9 +282,11 @@ class ProjectPaymentInvoice(models.Model):
         ordering = ["-issue_date"]
 
     def clean(self):
-        # if self.project.company_id != self.company_id:
-        #     raise ValidationError("Project must belong to the same company.")
-        if self.issue_date > self.due_date:
+        if self.project_id and self.company_id and self.project.company_id != self.company_id:
+            raise ValidationError("Project must belong to the same company.")
+        if self.amount is not None and self.amount <= 0:
+            raise ValidationError({"amount": "Amount must be greater than zero."})
+        if self.issue_date and self.due_date and self.issue_date > self.due_date:
             raise ValidationError("Issue date cannot be after due date.")
 
     def calculate_totals(self):
@@ -391,10 +370,13 @@ class Payment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
+     if self.amount is not None and self.amount <= 0:
+        raise ValidationError({"amount": "Payment amount must be greater than zero."})
+
      if not self.invoice:
         return
 
-     if self.status == PaymentStatus.CONFIRMED:
+     if self.status in (PaymentStatus.CONFIRMED, PaymentStatus.PENDING):
         confirmed_total = self.invoice.payments.filter(
             status=PaymentStatus.CONFIRMED
         ).exclude(pk=self.pk).aggregate(

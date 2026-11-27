@@ -32,6 +32,7 @@ from .models import (
     Invoice,
     InvoiceItem,
     InvoiceStatus,
+    Payment,
     PaymentStatus,
     ProjectPaymentInvoice,
 )
@@ -111,6 +112,7 @@ class ExpenseCreateView(SecureViewMixin, CreateView):
         expense = form.save(commit=False)
         expense.company = self.company
         expense.employee = self.profile
+        expense.currency = self.company.currency
         expense.save()
         self.object = expense  # get_success_url() reads it
         messages.success(self.request, "Expense submitted successfully.")
@@ -214,6 +216,7 @@ class CompanyExpenseCreateView(SecureViewMixin, CreateView):
         expense = form.save(commit=False)
         expense.company = self.company
         expense.employee = self.profile
+        expense.currency = self.company.currency
         expense.save()
         self.object = expense  # get_success_url() reads it
         messages.success(self.request, "Company expense submitted successfully.")
@@ -269,9 +272,9 @@ class ExpenseInvoiceView(SecureViewMixin, View):
 
     def get(self, request, expense_id):
         expense = get_object_or_404(Expense, id=expense_id, company=request.user.company_id)
-        invoice = Invoice.objects.filter(
-            company=expense.company, project=expense.project, subtotal=expense.amount
-        ).first()
+        invoice = Invoice.objects.filter(expense=expense).first()
+        if not invoice:
+            raise Http404("No invoice found for this expense.")
         html = render_to_string("finance/invoice_detail.html", {"expense": expense, "invoice": invoice})
         return HttpResponse(html)
 
@@ -294,17 +297,25 @@ class ExpenseInvoiceDownloadView(SecureViewMixin, View):
 # --------------------------------------------------------------------------- reports
 
 class ReportView(SecureViewMixin, TemplateView):
-    """Company-wide figures: finance managers only, and only their own company's data."""
+    """Company-wide figures: finance managers only, and only their own company's data.
+
+    Revenue is money actually received (confirmed client payments); expenses and project
+    spend count only approved expenses.
+    """
     template_name = "finance/report.html"
     required_perm = FINANCE_MANAGER_PERM
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         company = self.company
-        invoices = Invoice.objects.filter(company=company)
+        today = timezone.localdate()
+        client_invoices = ProjectPaymentInvoice.objects.filter(company=company)
+        approved = Expense.objects.filter(company=company, status=ExpenseStatus.APPROVED)
 
         projects_budget = []
-        for project in Project.objects.filter(company=company).annotate(spent=Sum("expenses__amount")):
+        for project in Project.objects.filter(company=company).annotate(
+            spent=Sum("expenses__amount", filter=Q(expenses__status=ExpenseStatus.APPROVED))
+        ):
             spent = project.spent or 0
             budget = project.budget or 0
             projects_budget.append({
@@ -314,21 +325,33 @@ class ReportView(SecureViewMixin, TemplateView):
                 "spent_pct": int((spent / budget) * 100) if budget > 0 else 0,
             })
 
+        paid_ids = [inv.pk for inv in client_invoices if inv.balance_due <= 0 and inv.total_amount > 0]
+        overdue_ids = [inv.pk for inv in client_invoices if inv.balance_due > 0 and inv.due_date < today]
+
+        def display_status(inv):
+            if inv.pk in paid_ids:
+                return "Paid"
+            if inv.pk in overdue_ids:
+                return "Overdue"
+            return "Partial" if inv.amount_paid > 0 else "Sent"
+
         context.update(
-            total_revenue=invoices.filter(status__in=["paid", "partial"]).aggregate(total=Sum("total_amount"))["total"] or 0,
-            total_expenses=Expense.objects.filter(company=company).aggregate(total=Sum("amount"))["total"] or 0,
-            paid_invoices_count=invoices.filter(status="paid").count(),
-            overdue_count=invoices.filter(status="overdue").count(),
+            total_revenue=Payment.objects.filter(
+                company=company, status=PaymentStatus.CONFIRMED
+            ).aggregate(total=Sum("amount"))["total"] or 0,
+            total_expenses=approved.aggregate(total=Sum("amount"))["total"] or 0,
+            paid_invoices_count=len(paid_ids),
+            overdue_count=len(overdue_ids),
             projects_budget=projects_budget,
             recent_invoices=[
                 {
                     "number": inv.invoice_no,
-                    "client_name": inv.client.name if inv.client else "-",
+                    "client_name": inv.project.client.name if inv.project.client else "-",
                     "amount": inv.total_amount,
-                    "status": inv.get_status_display(),
+                    "status": display_status(inv),
                     "issue_date": inv.issue_date,
                 }
-                for inv in invoices.select_related("client").order_by("-issue_date")[:5]
+                for inv in client_invoices.select_related("project__client").order_by("-issue_date")[:5]
             ],
         )
         return context
@@ -359,37 +382,13 @@ def company_invoices_view(request, company_id):
         "invoices": invoices,
         "selected_project_id": project_id or "",
     }
-    return render(request, "finance/invoice_list.html", context)
+    return render(request, "finance/project_invoices.html", context)
 
 
 @secure_view(perm=FINANCE_MANAGER_PERM)
 def select_project_invoices(request, company_id):
     company = _own_company_or_404(request, company_id)
     return render(request, "finance/select_project.html", {"company": company, "projects": company.projects.all()})
-
-
-class ProjectInvoiceListView(SecureViewMixin, ListView):
-    model = Invoice
-    template_name = "finance/invoice_list.html"
-    context_object_name = "invoices"
-    required_perm = FINANCE_MANAGER_PERM
-
-    def get_queryset(self):
-        _own_company_or_404(self.request, self.kwargs.get("company_id"))
-        queryset = Invoice.objects.filter(company=self.request.user.company_id)
-        project_id = self.kwargs.get("project_id")
-        if project_id:
-            queryset = queryset.filter(project_id=project_id)
-        return queryset.order_by("-issue_date")
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(
-            company=self.company,
-            projects=Project.objects.filter(company=self.company),
-            selected_project_id=self.kwargs.get("project_id", ""),
-        )
-        return context
 
 
 # --------------------------------------------------------------------------- client billing
