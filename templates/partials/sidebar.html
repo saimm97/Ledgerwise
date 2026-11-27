@@ -108,6 +108,7 @@
       </a>
     </div>
 
+{% if perms.workforce.add_payrollrun %}
     <div class="nav-section">Insights</div>
     <div class="nav-item">
       <a href="{% url 'report' %}" class="nav-link{% if u == "report" %} active{% endif %}"{% if u == "report" %} aria-current="page"{% endif %}>
@@ -115,6 +116,7 @@
         Reports
       </a>
     </div>
+{% endif %}
   </nav>
 
   <div class="sidebar-footer">
