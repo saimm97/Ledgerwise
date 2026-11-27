@@ -51,6 +51,7 @@
 
       <form method="POST" action="{% url 'login' %}" id="loginForm" novalidate>
         {% csrf_token %}
+        {% if next and next != 'dashboard' %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
         <div class="form-group">
           <label for="id_username" class="form-label">Username</label>
