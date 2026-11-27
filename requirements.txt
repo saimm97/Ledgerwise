@@ -37,3 +37,4 @@ wcwidth==0.6.0
 weasyprint==70.0
 webencodings==0.5.1
 zopfli==0.4.1
+gunicorn==27.0.1

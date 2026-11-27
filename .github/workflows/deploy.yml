@@ -23,11 +23,12 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t rafaydevsinc/ledgerwise-server:latest .
+          docker build -t rafaydevsinc/ledgerwise-server:latest -t rafaydevsinc/ledgerwise-server:${{ github.sha }} .
 
       - name: Push Image to DockerHub
         run: |
           docker push rafaydevsinc/ledgerwise-server:latest
+          docker push rafaydevsinc/ledgerwise-server:${{ github.sha }}
 
 
   deploy:
@@ -58,7 +59,8 @@ jobs:
           -i ~/.ssh/ledgerwise.pem \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
-          docker pull rafaydevsinc/ledgerwise-server:latest
+          export IMAGE_TAG=${{ github.sha }}
+          docker pull rafaydevsinc/ledgerwise-server:$IMAGE_TAG
           docker compose -f docker-compose-dev.yaml up -d
           
           EOF

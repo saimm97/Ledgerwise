@@ -20,7 +20,7 @@ services:
       - "127.0.0.1:6379:6379"
 
   server:
-    image: rafaydevsinc/ledgerwise-server:latest
+    image: rafaydevsinc/ledgerwise-server:${IMAGE_TAG:-latest}
     pull_policy: always
     restart: always
     env_file:
@@ -35,10 +35,10 @@ services:
       - DJANGO_SETTINGS_MODULE=Ledgerwise.settings.docker
       - REDIS_URL=redis://redis:6379/0
     entrypoint: /usr/local/bin/entrypoint.sh
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["gunicorn", "Ledgerwise.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
 
   celery:
-    image: rafaydevsinc/ledgerwise-server:latest
+    image: rafaydevsinc/ledgerwise-server:${IMAGE_TAG:-latest}
     pull_policy: always
     restart: always
     env_file:

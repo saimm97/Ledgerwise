@@ -2,6 +2,9 @@ FROM python:3.12.10-slim
 
 WORKDIR /app
 
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 # RUN apt-get update && apt-get install -y \
 #     gcc \
 #     libpq-dev \
@@ -44,8 +47,12 @@ COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/wait-for-it.sh
 
+# Run as a normal user, not root.
+RUN useradd --create-home --uid 1000 app && chown -R app:app /app
+USER app
+
 EXPOSE 8000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
-CMD ["gunicorn", "Ledgerwise.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "Ledgerwise.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--access-logfile", "-"]
