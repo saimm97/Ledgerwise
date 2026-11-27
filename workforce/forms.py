@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Timesheet, EmployeeProfile
 from operations.models import EmployeeProject, Project
 from django import forms
@@ -56,6 +57,17 @@ class TimesheetForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        hours = cleaned_data.get("hours_worked")
+        day = cleaned_data.get("date")
+        project = cleaned_data.get("project")
+        if hours is not None and hours <= 0:
+            self.add_error("hours_worked", "Hours must be greater than zero.")
+        if day and day > timezone.localdate():
+            self.add_error("date", "You cannot log hours for a future date.")
+        if day and project and project.start_date and day < project.start_date:
+            self.add_error("date", f"This project started on {project.start_date}.")
+        if self.errors:
+            return cleaned_data
         try:
           
             self.instance.clean()

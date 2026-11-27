@@ -266,15 +266,15 @@ class PayrollRun(models.Model):
      if self.period_start > self.period_end:
         raise ValidationError("Period start must be before period end.")
 
-    #  overlapping = PayrollRun.objects.filter(
-    #      company_id=self.company_id,
-    #      period_start__lte=self.period_end,
-    #      period_end__gte=self.period_start,
-    #  )
-    #  if self.pk:
-    #      overlapping = overlapping.exclude(pk=self.pk)
-    #  if overlapping.exists():
-    #      raise ValidationError("This payroll period overlaps with an existing payroll run.")
+     overlapping = PayrollRun.objects.filter(
+         company_id=self.company_id,
+         period_start__lte=self.period_end,
+         period_end__gte=self.period_start,
+     )
+     if self.pk:
+         overlapping = overlapping.exclude(pk=self.pk)
+     if overlapping.exists():
+         raise ValidationError("This payroll period overlaps with an existing payroll run.")
 
     def save(self, *args, **kwargs):
        
