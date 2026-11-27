@@ -112,6 +112,7 @@ class ExpenseCreateView(SecureViewMixin, CreateView):
         expense.company = self.company
         expense.employee = self.profile
         expense.save()
+        self.object = expense  # get_success_url() reads it
         messages.success(self.request, "Expense submitted successfully.")
         return HttpResponseRedirect(self.get_success_url())
 
@@ -214,6 +215,7 @@ class CompanyExpenseCreateView(SecureViewMixin, CreateView):
         expense.company = self.company
         expense.employee = self.profile
         expense.save()
+        self.object = expense  # get_success_url() reads it
         messages.success(self.request, "Company expense submitted successfully.")
         return HttpResponseRedirect(self.get_success_url())
 

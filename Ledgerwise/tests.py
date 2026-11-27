@@ -186,6 +186,30 @@ class ExpenseApprovalTests(SecurityTestCase):
         self.assertEqual(self.client.post(reverse("company-expense-approve", args=[expense.pk]), {"status": "approved"}).status_code, 403)
 
 
+class ExpenseSubmissionTests(SecurityTestCase):
+    """Submitting an expense must save it and redirect (this once crashed after saving)."""
+
+    def test_employee_can_submit_project_expense(self):
+        self.login(self.eng_a)
+        response = self.client.post(reverse("expense-add"), {
+            "project": self.project.pk, "category": self.category.pk, "amount": "25.00",
+            "description": "Taxi", "expense_date": "2025-01-02",
+        })
+        self.assertRedirects(response, reverse("expense-list"), fetch_redirect_response=False)
+        expense = Expense.objects.get(description="Taxi")
+        self.assertEqual(expense.company, self.company_a)
+        self.assertEqual(expense.employee, self.eng_a_profile)
+        self.assertEqual(expense.status, ExpenseStatus.SUBMITTED)
+
+    def test_employee_can_submit_company_expense(self):
+        self.login(self.eng_a)
+        response = self.client.post(reverse("company-expense-add"), {
+            "category": self.category.pk, "amount": "9.50", "description": "Coffee", "expense_date": "2025-01-02",
+        })
+        self.assertRedirects(response, reverse("company-expense-list"), fetch_redirect_response=False)
+        self.assertTrue(Expense.objects.filter(description="Coffee", project__isnull=True).exists())
+
+
 class TimesheetTests(SecurityTestCase):
     def make_timesheet(self, employee):
         return Timesheet.objects.create(
