@@ -1,20 +1,65 @@
-from datetime import date
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
+import logging
+
 from django.contrib import messages
-from django.views.decorators.http import require_POST
-from django.contrib.auth import logout
-from django.shortcuts import redirect, render
-from django.views.generic import DetailView
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
+from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
+from django.views.generic import DetailView
+
 from accounts.models import User
 
-from django.contrib.auth.forms import AuthenticationForm
+logger = logging.getLogger(__name__)
 
 
 def landing_view(request):
     return render(request, "landing.html")
+
+
+LOGIN_MAX_FAILURES = 5
+LOGIN_LOCKOUT_SECONDS = 15 * 60
+
+
+def _login_throttle_key(request):
+    username = request.POST.get("username", "").strip().lower()
+    return f"login-fail:{request.META.get('REMOTE_ADDR', '')}:{username}"
+
+
+def _login_failures(key):
+    try:
+        return cache.get(key, 0)
+    except Exception:  # the cache being down must not lock everyone out
+        logger.warning("Login throttle cache unavailable", exc_info=True)
+        return 0
+
+
+def _record_login_failure(key):
+    try:
+        cache.add(key, 0, LOGIN_LOCKOUT_SECONDS)
+        cache.incr(key)
+    except Exception:
+        logger.warning("Login throttle cache unavailable", exc_info=True)
+
+
+def _clear_login_failures(key):
+    try:
+        cache.delete(key)
+    except Exception:
+        logger.warning("Login throttle cache unavailable", exc_info=True)
+
+
+def _safe_next_url(request):
+    """Only follow a ?next= that stays on this site."""
+    target = request.POST.get("next") or request.GET.get("next") or ""
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return target
+    return "dashboard"
 
 
 def login_view(request):
@@ -22,16 +67,22 @@ def login_view(request):
         return redirect("dashboard")
 
     if request.method == "POST":
+        key = _login_throttle_key(request)
+        if _login_failures(key) >= LOGIN_MAX_FAILURES:
+            messages.error(request, "Too many failed attempts. Please wait 15 minutes and try again.")
+            form = AuthenticationForm(request)
+            return render(request, "login.html", {"form": form, "next": _safe_next_url(request)}, status=429)
+
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
+            _clear_login_failures(key)
             login(request, form.get_user())
-            return redirect("dashboard")
+            return redirect(_safe_next_url(request))
+        _record_login_failure(key)
     else:
         form = AuthenticationForm(request)
 
-    return render(request, "login.html", {"form": form})
-
-
+    return render(request, "login.html", {"form": form, "next": _safe_next_url(request)})
 
 
 @login_required(login_url="login")

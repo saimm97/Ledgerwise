@@ -47,7 +47,7 @@
                         <a href="{% url 'project_detail' project.id %}" class="btn btn-sm">
                             View
                         </a>
-                        <a href="{% url 'project_timeline' project.id %}" class="btn btn-sm btn-ghost">Monthly view</a>
+                        {% if project.id in finance_project_ids %}<a href="{% url 'project_timeline' project.id %}" class="btn btn-sm btn-ghost">Monthly view</a>{% endif %}
                     </td>
                 </tr>
                 {% empty %}
