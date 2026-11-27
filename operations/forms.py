@@ -46,9 +46,8 @@ class ProjectWithClientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Limit project manager choices to employees of the user's company
-        if self.user and getattr(self.user, 'employee_profile', None):
-            company = self.user.employee_profile.company
-            self.fields['project_manager'].queryset = EmployeeProfile.objects.filter(company=company)
+        if self.user and self.user.company_id:
+            self.fields['project_manager'].queryset = EmployeeProfile.objects.filter(company_id=self.user.company_id)
         else:
             self.fields['project_manager'].queryset = EmployeeProfile.objects.none()
 
